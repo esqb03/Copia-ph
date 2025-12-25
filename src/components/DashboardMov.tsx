@@ -37,10 +37,6 @@ export default function DashboardMov() {
         </>
       )}
 
-      {/* Main Content corregido: 
-          - Se añade 'pb-32' para evitar que el Sidebar inferior tape el contenido.
-          - Se asegura el espaciado consistente entre elementos.
-      */}
       <main className="p-4 pb-32">
         <div className="space-y-4"> 
           

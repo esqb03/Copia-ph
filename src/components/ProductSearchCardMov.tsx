@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Search, RefreshCw, ArrowLeft, Check } from "lucide-react";
+import { Search, RefreshCw, ArrowLeft } from "lucide-react";
 import ProductCardMov from "./ProductCardMov";
-import { toast } from "sonner";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -44,12 +43,10 @@ export default function ProductSearchCardMov({ onAdd, onDecrease, cart, onClose,
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // REFERENCIA PARA EL INPUT (Para el Auto-Focus)
   const inputRef = useRef<HTMLInputElement>(null);
 
   // --- Auto-Focus al abrir ---
   useEffect(() => {
-    // Pequeño timeout para asegurar que la animación del modal termine antes de llamar al teclado
     const timer = setTimeout(() => {
       if (inputRef.current) {
         inputRef.current.focus();
@@ -84,24 +81,28 @@ export default function ProductSearchCardMov({ onAdd, onDecrease, cart, onClose,
   // --- Handlers Internos ---
   const handleAddInternal = (product: ProductBase) => {
     if (product.qty_available <= 0) {
-      setModalState({ isOpen: true, title: "⚠️ Sin Stock", message: `El producto "${product.name}" no tiene unidades disponibles.`, onConfirm: () => setModalState((p) => ({ ...p, isOpen: false })), onCancel: () => setModalState((p) => ({ ...p, isOpen: false })), confirmText: "Entendido", isDanger: false, showCancel: false });
+      setModalState({ 
+        isOpen: true, 
+        title: "⚠️ Sin Stock", 
+        message: `El producto "${product.name}" no tiene unidades disponibles.`, 
+        onConfirm: () => setModalState((p) => ({ ...p, isOpen: false })), 
+        onCancel: () => setModalState((p) => ({ ...p, isOpen: false })), 
+        confirmText: "Entendido", 
+        isDanger: false, 
+        showCancel: false 
+      });
       return; 
     }
+    // Se eliminó el toast.success para evitar interrupciones visuales
     onAdd(product);
-    // Hacemos el toast un poco más rápido para no estorbar
-    toast.success(`${product.name} agregado`, { description: "Cantidad actualizada", duration: 800, position: "top-center", icon: <Check size={16} className="text-green-500" /> });
-    
-    // Opcional: Mantener el foco en el input después de agregar por si quiere buscar otro rápido
-    // inputRef.current?.focus(); 
   };
 
   const handleDecreaseInternal = (product: ProductBase) => {
     onDecrease(product);
   };
 
-  // --- Render ---
   return (
-    <div className="flex flex-col h-full w-full bg-white">
+    <div className="flex flex-col h-full w-full bg-white font-sans">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 sticky top-0 bg-white z-10">
         {onClose && ( <button onClick={onClose} className="p-2 -ml-2 text-gray-500 hover:bg-gray-50 rounded-full"> <ArrowLeft size={20} /> </button> )}
@@ -111,15 +112,15 @@ export default function ProductSearchCardMov({ onAdd, onDecrease, cart, onClose,
 
       {/* Buscador */}
       <div className="p-3 bg-white">
-        <div className="flex items-center w-full rounded-xl bg-gray-50 border border-gray-200 px-3 py-2.5 focus-within:border-[#a89076] focus-within:ring-1 focus-within:ring-[#a89076] transition-all">
+        <div className="flex items-center w-full rounded-xl bg-gray-50 border border-gray-200 px-3 py-2 focus-within:border-[#a89076] focus-within:ring-1 focus-within:ring-[#a89076] transition-all">
           <Search className="w-5 h-5 text-gray-400 mr-2 flex-shrink-0" />
           <input 
-            ref={inputRef} // <--- REFERENCIA CONECTADA AQUÍ
+            ref={inputRef}
             type="text" 
             placeholder="Buscar..." 
             value={query} 
             onChange={(e) => setQuery(e.target.value)} 
-            className="bg-transparent border-none p-0 w-full text-sm text-gray-800 placeholder:text-gray-400 focus:ring-0 outline-none" 
+            className="bg-transparent border-none p-0 w-full text-base text-gray-800 placeholder:text-gray-400 focus:ring-0 outline-none leading-normal" 
             disabled={loading} 
           />
         </div>

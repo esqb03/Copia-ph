@@ -1,4 +1,3 @@
-// src/components/PartnerSearchInput.tsx
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Search, XCircle, User, Phone, Mail, ChevronRight } from 'lucide-react';
 import type { Partner } from '../types/types';
@@ -18,7 +17,6 @@ export default function PartnerSearchInput({ onPartnerSelect, initialPartner = n
   
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // 1. CARGA INICIAL
   const fetchBasePartners = useCallback(async () => {
     const eid = localStorage.getItem('employee_id');
     if (!eid) return;
@@ -38,7 +36,6 @@ export default function PartnerSearchInput({ onPartnerSelect, initialPartner = n
     }
   }, []);
 
-  // 2. BÚSQUEDA DINÁMICA
   const fetchFilteredPartners = useCallback(async (query: string) => {
     const eid = localStorage.getItem('employee_id');
     if (!eid) return;
@@ -77,20 +74,19 @@ export default function PartnerSearchInput({ onPartnerSelect, initialPartner = n
 
   return (
     <div className="flex flex-col h-full w-full">
-      {/* --- BARRA DE BÚSQUEDA TIPO FLEX (INDESTRUCTIBLE) --- */}
+      {/* --- BARRA DE BÚSQUEDA --- */}
       <div 
         className="
-          flex items-center w-full mb-3 px-3 py-3 
+          flex items-center w-full mb-3 px-3 py-2.5 
           bg-[#faf8f4] border border-[#e8dfd0] rounded-xl 
           focus-within:ring-1 focus-within:ring-[#a89076] focus-within:border-[#a89076] 
           focus-within:bg-white
           transition-all shadow-sm flex-shrink-0
         "
       >
-        {/* LUPA: Fija en el flujo flex, imposible que se mueva */}
         <Search className="h-5 w-5 text-[#a89076] mr-3 flex-shrink-0" />
         
-        {/* INPUT: Transparente, ocupa el resto del espacio */}
+        {/* INPUT: text-base (16px) previene el zoom en móviles */}
         <input
           ref={inputRef}
           type="text"
@@ -100,11 +96,10 @@ export default function PartnerSearchInput({ onPartnerSelect, initialPartner = n
           className="
             flex-1 bg-transparent border-none p-0 
             text-gray-900 placeholder-gray-400 
-            text-sm focus:ring-0 leading-tight
+            text-base focus:ring-0 leading-tight
           "
         />
 
-        {/* BOTÓN BORRAR */}
         {searchTerm && (
           <button 
             onClick={handleClear}
@@ -134,38 +129,24 @@ export default function PartnerSearchInput({ onPartnerSelect, initialPartner = n
                     hover:border-[#a89076] hover:shadow-md transition-all
                 "
               >
-                {/* 1. AVATAR (Izquierda) */}
                 <div className="flex-shrink-0 h-10 w-10 rounded-full bg-[#f0e4d8] flex items-center justify-center text-[#8c735a] font-bold text-sm">
                     {p.name ? p.name.substring(0, 2).toUpperCase() : '??'}
                 </div>
 
-                {/* 2. CONTENIDO (Centro - Orden Vertical Estricto) */}
                 <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                  
-                  {/* NOMBRE */}
                   <div className="text-sm font-bold text-gray-800 truncate">
                     {p.name}
                   </div>
-                  
-                  {/* CORREO */}
                   <div className="flex items-center gap-1.5 text-xs text-gray-500 min-w-0">
                      <Mail size={12} className="flex-shrink-0 text-[#a89076]" />
-                     <span className="truncate">
-                        {p.email || 'Sin email'}
-                     </span>
+                     <span className="truncate">{p.email || 'Sin email'}</span>
                   </div>
-
-                  {/* TELÉFONO */}
                   <div className="flex items-center gap-1.5 text-xs text-gray-500 min-w-0">
                       <Phone size={12} className="flex-shrink-0 text-[#a89076]" />
-                      <span className="truncate">
-                          {p.phone || 'Sin teléfono'}
-                      </span>
+                      <span className="truncate">{p.phone || 'Sin teléfono'}</span>
                   </div>
-
                 </div>
                 
-                {/* 3. FLECHA (Derecha) */}
                 <div className="flex-shrink-0 text-gray-300 group-hover:text-[#a89076] transition-colors">
                     <ChevronRight className="h-5 w-5" />
                 </div>

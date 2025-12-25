@@ -1,12 +1,8 @@
-// src/components/ProductSearchCard.tsx
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Search } from "lucide-react";
 import ProductCard from "./ProductCard";
-import { toast } from "sonner";
-import { Check } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
-
 
 interface ProductBase {
   id: number | string;
@@ -45,6 +41,8 @@ export default function ProductSearchCard({
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // -------------------- FILTRO POR TEXTO --------------------
   useEffect(() => {
@@ -54,15 +52,12 @@ export default function ProductSearchCard({
     }
 
     const lower = query.toLowerCase();
-
     const result = products
-      // seguridad: solo productos con stock
       .filter((p) => p.qty_available > 0)
       .filter(
         (p) =>
           p.name.toLowerCase().includes(lower) ||
-          (p.default_code &&
-            p.default_code.toLowerCase().includes(lower))
+          (p.default_code && p.default_code.toLowerCase().includes(lower))
       );
 
     setFiltered(result);
@@ -75,13 +70,9 @@ export default function ProductSearchCard({
 
     try {
       const res = await fetch(`${API_URL}/products`);
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
       const data = await res.json();
-
-      // Normalizamos el array base
       let baseArray: ProductBase[] = [];
 
       if (Array.isArray(data)) {
@@ -89,26 +80,16 @@ export default function ProductSearchCard({
       } else if (data.products && Array.isArray(data.products)) {
         baseArray = data.products;
       } else {
-        console.error("Formato inesperado de respuesta:", data);
         setError("Formato de datos inesperado de la API.");
         setLoading(false);
         return;
       }
 
-      // 👉 SOLO productos con stock
-      const productsWithStock = baseArray.filter(
-        (p) => (p.qty_available ?? 0) > 0
-      );
-
+      const productsWithStock = baseArray.filter((p) => (p.qty_available ?? 0) > 0);
       setProducts(productsWithStock);
       setFiltered(productsWithStock);
     } catch (err) {
-      console.error("Error al obtener productos:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Error desconocido al cargar productos."
-      );
+      setError(err instanceof Error ? err.message : "Error desconocido.");
     } finally {
       setLoading(false);
     }
@@ -119,7 +100,6 @@ export default function ProductSearchCard({
   }, [fetchProducts]);
 
   const handleAddInternal = (product: ProductBase) => {
-    // 1. SEGURIDAD: Chequeo de stock (Tu lógica original)
     if (product.qty_available <= 0) {
         setModalState({
           isOpen: true,
@@ -131,24 +111,15 @@ export default function ProductSearchCard({
           isDanger: false,
           showCancel: false,
         });
-        return; // Detenemos todo si no hay stock
+        return;
     }
 
-    // 2. Si pasa la seguridad, agregamos al carrito
+    // Agregamos al carrito sin notificaciones (minimalista)
     onAdd(product);
-    
-    // 3. FEEDBACK VISUAL (En lugar de salir)
-    toast.success(`${product.name} agregado`, {
-        description: "Sigue agregando...",
-        duration: 1500,
-        position: "top-center",
-        icon: <Check size={16} className="text-green-500" />
-    });
   };
 
-  // -------------------- RENDER --------------------
   return (
-    <div className="bg-white rounded-xl shadow-lg p-4 flex flex-col h-full">
+    <div className="bg-white rounded-xl shadow-lg p-4 flex flex-col h-full font-sans">
       {/* HEADER + BUSCADOR */}
       <div className="mb-4 flex-shrink-0">
         <h2 className="text-xl font-semibold text-gray-900 mb-1">
@@ -160,8 +131,9 @@ export default function ProductSearchCard({
 
         <div className="relative">
           <input
+            ref={inputRef}
             type="text"
-            placeholder="Buscar producto por nombre o código..."
+            placeholder="Buscar producto..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="
@@ -170,9 +142,11 @@ export default function ProductSearchCard({
               border border-[#a89076]
               text-gray-800
               placeholder:text-gray-500
+              /* text-base (16px) previene el zoom automático en móviles */
+              text-base
               focus:border-[#967d63] 
               focus:ring-1 focus:ring-[#a89076]
-              transition
+              transition outline-none
             "
             disabled={loading}
           />
@@ -199,15 +173,7 @@ export default function ProductSearchCard({
             No se encontraron productos para "{query}".
           </div>
         ) : (
-          <div
-            className="
-              grid gap-3
-              grid-cols-2
-              sm:grid-cols-3
-              md:grid-cols-4
-              lg:grid-cols-5
-            "
-          >
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {filtered.map((prod) => (
               <ProductCard
                 key={prod.id}
@@ -221,5 +187,3 @@ export default function ProductSearchCard({
     </div>
   );
 }
-
-
