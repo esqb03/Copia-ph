@@ -182,11 +182,11 @@ const OrderPanel = forwardRef<HTMLDivElement, OrderPanelProps>((props, ref) => {
         </div>
 
         {items.length > 0 && (
-          <div className="bg-white rounded-[24px] shadow-sm p-6 flex flex-col items-center justify-center gap-1 mt-2">
-            <span className="text-xl font-bold text-gray-800 tracking-tighter">
+          <div className="bg-white rounded-[24px] shadow-sm p-6 flex flex-col items-center justify-center gap-2 mt-2">
+            <span className="text-xs font-semibold text-gray-500 tracking-wide">
               TOTAL A PAGAR
             </span>
-            <span className="text-4xl font-black text-gray-800 tracking-tighter">
+            <span className="text-3xl font-bold text-gray-900 tracking-tight">
               {formatCurrency(grandTotal)}
             </span>
           </div>
