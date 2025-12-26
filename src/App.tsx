@@ -19,6 +19,7 @@ import OrderList from "./pages/OrdersSalesList";
 import OrderListMov from "./pages/OrdersSalesListMov";
 import LogoLoader from "./components/LogoLoader";
 import { Toaster } from "sonner";
+import { prefetchProducts, refreshProducts } from "./lib/productCache";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -45,6 +46,20 @@ export default function App() {
       clearTimeout(timer);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    prefetchProducts();
+
+    const id = window.setInterval(() => {
+      refreshProducts().catch(() => {});
+    }, 15 * 60 * 1000);
+
+    return () => {
+      window.clearInterval(id);
+    };
+  }, [isLoggedIn]);
 
   const handleLogin = () => {
     setIsLoggedIn(true);

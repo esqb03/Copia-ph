@@ -6,6 +6,7 @@ import PartnerSelectModal from "../components/PartnerSelectModal";
 import MinimalModal from "../components/MinimalModal";
 import { openWompiUniversal } from "../lib/wompiLoader";
 import { createPortal } from "react-dom"; 
+import { refreshProducts } from "../lib/productCache";
 
 // ... (Interfaces y Tipos sin cambios) ...
 interface ProductBase { id: number | string; name: string; list_price?: number; price?: number | string; image_512?: string; qty_available: number; default_code?: string; description_sale?: string; [key: string]: any; }
@@ -113,45 +114,105 @@ export default function CreateOrderTest({ onBack }: CreateOrderTestProps) {
 
   // Función para limpiar la persistencia una vez la orden se completa
   const clearPersistence = () => {
-    localStorage.removeItem("odoo_pending_cart");
-    localStorage.removeItem("odoo_pending_partner");
-    setCart([]);
-    setSelectedPartner(null);
-  };
+  localStorage.removeItem("odoo_pending_cart");
+  localStorage.removeItem("odoo_pending_partner");
+  setCart([]);
+  setSelectedPartner(null);
+};
 
-  const handleFinalizeOrder = useCallback(async () => {
-    if (!selectedPartner) { setModalState({ isOpen: true, title: "Cliente requerido", message: "Selecciona un cliente.", onConfirm: () => setModalState(p => ({...p, isOpen: false})), onCancel: () => {}, confirmText: "Entendido", isDanger: false, showCancel: false }); return; }
-    if (cart.length === 0) { setModalState({ isOpen: true, title: "Carrito vacío", message: "Agrega productos.", onConfirm: () => setModalState(p => ({...p, isOpen: false})), onCancel: () => {}, confirmText: "Entendido", isDanger: false, showCancel: false }); return; }
-    const amountInCents = computeAmountInCents(cart);
-    try {
-      setOrderSubmitting(true);
-      const employeeIdStr = window.localStorage.getItem("employee_id");
-      const body = { partner_id: selectedPartner.id, order_line: cart.map(it => ({ product_id: it.id, product_uom_qty: it.qty, price_unit: getNumericPrice(it) })), employee_id: employeeIdStr ? parseInt(employeeIdStr, 10) : undefined };
-      const res = await fetch(`${API_URL}/create-sale-order`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      const data = await res.json();
-      if (!res.ok || data?.success === false) throw new Error(data?.message || "Error al crear orden");
-      
-      setModalState({ 
-        isOpen: true, 
-        title: "¡Orden creada!", 
-        message: `Orden ${data.order_id} creada. ¿Pagar ahora?`, 
-        onConfirm: async () => { 
-          setModalState(p => ({...p, isOpen: false})); 
-          clearPersistence(); // Limpia al confirmar pago
-          await payWithWompi({ order_id: data.order_id, amountInCents, currency: "COP" }); 
-        }, 
-        onCancel: () => { 
-          setModalState(p => ({...p, isOpen: false})); 
-          clearPersistence(); // Limpia al cerrar sin pagar (ya está en Odoo)
-        }, 
-        confirmText: "Pagar ahora", 
-        isDanger: false, 
-        showCancel: true 
-      });
-    } catch (err: any) {
-      setModalState({ isOpen: true, title: "Error", message: err?.message || "Error al crear orden", onConfirm: () => setModalState(p => ({...p, isOpen: false})), onCancel: () => {}, confirmText: "Continuar", isDanger: true, showCancel: false });
-    } finally { setOrderSubmitting(false); }
-  }, [cart, selectedPartner, computeAmountInCents, getNumericPrice, payWithWompi]);
+const handleFinalizeOrder = useCallback(async () => {
+  if (!selectedPartner) {
+    setModalState({
+      isOpen: true,
+      title: "Cliente requerido",
+      message: "Selecciona un cliente.",
+      onConfirm: () => setModalState(p => ({ ...p, isOpen: false })),
+      onCancel: () => {},
+      confirmText: "Entendido",
+      isDanger: false,
+      showCancel: false,
+    });
+    return;
+  }
+  if (cart.length === 0) {
+    setModalState({
+      isOpen: true,
+      title: "Carrito vacío",
+      message: "Agrega productos.",
+      onConfirm: () => setModalState(p => ({ ...p, isOpen: false })),
+      onCancel: () => {},
+      confirmText: "Entendido",
+      isDanger: false,
+      showCancel: false,
+    });
+    return;
+  }
+
+  const amountInCents = computeAmountInCents(cart);
+
+  try {
+    setOrderSubmitting(true);
+    const employeeIdStr = window.localStorage.getItem("employee_id");
+    const body = {
+      partner_id: selectedPartner.id,
+      order_line: cart.map(it => ({
+        product_id: it.id,
+        product_uom_qty: it.qty,
+        price_unit: getNumericPrice(it),
+      })),
+      employee_id: employeeIdStr ? parseInt(employeeIdStr, 10) : undefined,
+    };
+
+    const res = await fetch(`${API_URL}/create-sale-order`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok || data?.success === false) {
+      throw new Error(data?.message || "Error al crear orden");
+    }
+
+    await refreshProducts();
+
+    setModalState({
+      isOpen: true,
+      title: "¡Orden creada!",
+      message: `Orden ${data.order_id} creada. ¿Pagar ahora?`,
+      onConfirm: async () => {
+        setModalState(p => ({ ...p, isOpen: false }));
+        clearPersistence();
+        await payWithWompi({
+          order_id: data.order_id,
+          amountInCents,
+          currency: "COP",
+        });
+        await refreshProducts();
+      },
+      onCancel: async () => {
+        setModalState(p => ({ ...p, isOpen: false }));
+        clearPersistence();
+        await refreshProducts();
+      },
+      confirmText: "Pagar ahora",
+      isDanger: false,
+      showCancel: true,
+    });
+  } catch (err: any) {
+    setModalState({
+      isOpen: true,
+      title: "Error",
+      message: err?.message || "Error al crear orden",
+      onConfirm: () => setModalState(p => ({ ...p, isOpen: false })),
+      onCancel: () => {},
+      confirmText: "Continuar",
+      isDanger: true,
+      showCancel: false,
+    });
+  } finally {
+    setOrderSubmitting(false);
+  }
+}, [cart, selectedPartner, computeAmountInCents, getNumericPrice, payWithWompi]);
 
   // ... (Resto del Render sin cambios) ...
   return (
