@@ -226,7 +226,7 @@ const handleFinalizeOrder = useCallback(async () => {
       </header>
 
       <main className="p-4 sm:p-6 pb-48">
-        <div className="max-w-xl mx-auto flex flex-col gap-5">
+        <div className="max-w-lg mx-auto w-full flex flex-col gap-5">
           
           {/* Tarjeta Cliente */}
           <div

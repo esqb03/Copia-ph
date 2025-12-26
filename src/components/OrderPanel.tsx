@@ -31,8 +31,7 @@ const formatCurrency = (amount: number): string =>
   }).format(amount || 0);
 
 const getNumericPrice = (item: CartItem): number => {
-  if (typeof item.list_price === "number" && item.list_price > 0)
-    return item.list_price;
+  if (typeof item.list_price === "number" && item.list_price > 0) return item.list_price;
   if (typeof item.price === "string") {
     const priceString = item.price.replace(/[$,\s]/g, "");
     const numericPrice = parseFloat(priceString);
@@ -79,21 +78,11 @@ const ProductImage = ({ item }: { item: any }) => {
 };
 
 const OrderPanel = forwardRef<HTMLDivElement, OrderPanelProps>((props, ref) => {
-  const {
-    items,
-    onRemove,
-    onQtyChange,
-    onFinalizeOrder,
-    isSubmitting,
-    onAddProductsClick,
-  } = props;
+  const { items, onRemove, onQtyChange, onFinalizeOrder, isSubmitting, onAddProductsClick } =
+    props;
 
   const subtotal = useMemo(
-    () =>
-      items.reduce(
-        (sum, item) => sum + getNumericPrice(item) * (item.qty || 0),
-        0,
-      ),
+    () => items.reduce((sum, item) => sum + getNumericPrice(item) * (item.qty || 0), 0),
     [items],
   );
 
@@ -101,22 +90,22 @@ const OrderPanel = forwardRef<HTMLDivElement, OrderPanelProps>((props, ref) => {
 
   return (
     <div ref={ref} className="bg-[#f8f9fa]">
-      <div className="p-3 sm:p-4 space-y-4">
+      <div className="pt-3 sm:pt-4 pb-4 space-y-4">
         <div className="bg-white rounded-[24px] shadow-sm overflow-hidden">
-          <div className="w-full flex items-center p-4 bg-gray-50/50">
+          <div className="px-4 pt-4 pb-2 flex items-center justify-between bg-gray-50/50">
             <div className="flex items-center gap-2">
-              <Package size={14} className="text-[#a89076]" />
-              <span className="text-xs font-bold text-gray-700 uppercase tracking-widest">
-                Productos
-              </span>
+              <div className="w-8 h-8 bg-[#faf6f0] rounded-full flex items-center justify-center border border-[#eaddcf]">
+                <Package className="w-4 h-4 text-[#a89076]" />
+              </div>
+              <h3 className="text-sm font-bold text-gray-700">Productos</h3>
             </div>
-            <div className="flex-1" />
             {onAddProductsClick && (
               <button
                 onClick={onAddProductsClick}
-                className="text-xs font-bold text-[#a89076] flex items-center gap-1.5 px-4 py-1.5 bg-white border border-[#a89076]/30 rounded-full shadow-sm active:scale-95 transition-all hover:bg-[#faf6f1] whitespace-nowrap"
+                className="text-xs font-bold text-[#a89076] hover:text-[#8f7a63] bg-white border border-[#a89076]/30 px-3 py-1.5 rounded-full shadow-sm active:scale-95 transition-all flex items-center gap-1"
               >
-                <Plus size={14} strokeWidth={3} /> Agregar
+                <Plus className="w-3 h-3" />
+                Agregar
               </button>
             )}
           </div>
@@ -125,9 +114,7 @@ const OrderPanel = forwardRef<HTMLDivElement, OrderPanelProps>((props, ref) => {
             {items.length === 0 ? (
               <div className="text-center py-12 flex flex-col items-center gap-2 text-gray-300">
                 <Package size={40} strokeWidth={1} />
-                <span className="text-sm font-medium">
-                  No hay productos en la orden
-                </span>
+                <span className="text-sm font-medium">No hay productos en la orden</span>
               </div>
             ) : (
               items.map((item: any) => {
@@ -159,9 +146,7 @@ const OrderPanel = forwardRef<HTMLDivElement, OrderPanelProps>((props, ref) => {
                     <div className="flex-shrink-0 mr-1">
                       <div className="flex flex-col items-center justify-between bg-[#faf6f1] rounded-full w-12 py-1.5 border border-[#eaddcf] shadow-sm">
                         <button
-                          onClick={() =>
-                            onQtyChange(item.id, (item.qty || 0) + 1)
-                          }
+                          onClick={() => onQtyChange(item.id, (item.qty || 0) + 1)}
                           className="w-full h-10 flex items-center justify-center text-[#a89076] hover:bg-[#a89076] hover:text-white rounded-full transition-colors active:scale-95"
                         >
                           <Plus size={18} strokeWidth={3} />
@@ -173,9 +158,7 @@ const OrderPanel = forwardRef<HTMLDivElement, OrderPanelProps>((props, ref) => {
 
                         <button
                           onClick={() =>
-                            isLastItem
-                              ? onRemove(item.id)
-                              : onQtyChange(item.id, item.qty - 1)
+                            isLastItem ? onRemove(item.id) : onQtyChange(item.id, item.qty - 1)
                           }
                           className={`w-full h-10 flex items-center justify-center rounded-full transition-colors active:scale-95 ${
                             isLastItem
@@ -200,8 +183,8 @@ const OrderPanel = forwardRef<HTMLDivElement, OrderPanelProps>((props, ref) => {
 
         {items.length > 0 && (
           <div className="bg-white rounded-[24px] shadow-sm p-6 flex flex-col items-center justify-center gap-1 mt-2">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-              Total a Pagar
+            <span className="text-xl font-bold text-gray-800 tracking-tighter">
+              TOTAL A PAGAR
             </span>
             <span className="text-4xl font-black text-gray-800 tracking-tighter">
               {formatCurrency(grandTotal)}
